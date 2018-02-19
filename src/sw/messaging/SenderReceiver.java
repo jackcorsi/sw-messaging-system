@@ -11,13 +11,14 @@ import java.util.concurrent.TimeUnit;
 
 /*
  * Class for communication with a server or client via a socket. Runs as a thread, receiving messages from the 
- * socket and adding them to an internal queue for processing
+ * socket and adding them to an internal queue ready for processing by the object's owner
  */
 
 public class SenderReceiver extends Thread {
 	
 	private BufferedReader in;
 	private BlockingQueue <String> queue = new LinkedBlockingQueue <String> ();
+	private int unread = 0; //Keeps track of the number of unread messages we have in the queue
 	private PrintStream out;
 	private Socket socket;
 	private boolean isConnected = false;
@@ -27,6 +28,7 @@ public class SenderReceiver extends Thread {
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintStream(socket.getOutputStream());
+			unread = 0;
 			isConnected = true;
 		} catch (IOException e) {
 			//Do nothing
@@ -37,8 +39,22 @@ public class SenderReceiver extends Thread {
 		out.println(msg);
 	}
 	
-	public String receive() {
+	public String receive() { //Collect a single incoming message from the socket
+		String next = queue.poll();
+		if (next != null) 
+			unread --;
 		return queue.poll();
+	}
+	
+	public String[] receive(int n) { //Collect n incoming messages from the socket, only if they are available
+		if (n <=  unread) {
+			String[] msgs = new String[n];
+			for (int i = 1; i <= n; i++)
+				msgs[i] = queue.poll();
+			unread -= n;
+			return msgs;
+		} else
+			return null;
 	}
 	
 	public boolean isConnected() {
@@ -46,7 +62,10 @@ public class SenderReceiver extends Thread {
 	}
 	
 	public String waitForMessage(long timeout) throws InterruptedException {
-		return queue.poll(timeout, TimeUnit.MILLISECONDS);
+		String next = queue.poll(timeout, TimeUnit.MILLISECONDS);
+		if (next != null) 
+			unread --;
+		return next;
 	}
 	
 	public void run() {
@@ -55,6 +74,7 @@ public class SenderReceiver extends Thread {
 			try {
 				msg = in.readLine();
 				queue.put(msg);
+				unread++; 
 			} catch (IOException e) {
 				isConnected = false;
 				break;

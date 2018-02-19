@@ -16,6 +16,11 @@ public class Client implements Runnable {
 		senderReceiver = new SenderReceiver(socket);
 		try {
 			name = senderReceiver.waitForMessage(200);
+			if (name == null) {
+				Report.error("Received no username from the client");
+				senderReceiver.interrupt();
+				return;
+			}
 			if (name.equals(SharedConst.QUIT_STRING))
 				senderReceiver.interrupt();
 		} catch (InterruptedException e) {
@@ -29,7 +34,8 @@ public class Client implements Runnable {
 	}
 	
 	public void sendMessage(Client sender, String text) {
-		//TODO: stub
+		senderReceiver.send(sender.getName());
+		senderReceiver.send(text);
 	}
 	
 	public boolean isConnected() {

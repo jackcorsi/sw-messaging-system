@@ -8,6 +8,8 @@ import sw.messaging.*;
 public class TerminalClient {
 	
 	private static SenderReceiver senderReceiver;
+	private static TerminalInputReader in;
+	private static String sendRecipient;
 
 	public static void main(String[] args) {
 		
@@ -30,15 +32,39 @@ public class TerminalClient {
 		} catch (IOException e) {
 			Report.error("Could not connect to server!");
 			return;
-		}
+		}//TODO: this
 		
 		senderReceiver = new SenderReceiver(socket);
+		senderReceiver.send(nickname);
+		in = new TerminalInputReader();
+		in.setName("Terminal input reader thread");
+		in.start();
 		mainLoop();
+		in.interrupt();
 	}
 	
 	public static void mainLoop() {
 		while (true) {
-			//TODO: this
+			if (!senderReceiver.isConnected()) {
+				Report.error("Server disconnected unexpectedly! Terminating");
+				return;
+			}
+			
+			//Send messages
+			String inString = in.get();
+			if (inString != null) {
+				if (sendRecipient != null) {
+					senderReceiver.send(sendRecipient);
+					senderReceiver.send(inString);
+					sendRecipient = null;
+				}  else 
+					sendRecipient = inString;
+			}
+			
+			//Receive messages
+			String[] strings = senderReceiver.receive(2); //Get 2 messages from the server 
+			if (strings != null) 
+				System.out.println(strings[0] + ": " + strings[2]);
 		}
 	}
 }

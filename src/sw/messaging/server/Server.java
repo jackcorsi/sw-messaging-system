@@ -17,7 +17,7 @@ public class Server {
 		try {
 			serverSocket = new ServerSocket(SharedConst.PORT_NUMBER);
 		} catch (IOException e) {
-			Report.error("Failed to create sever socket");
+			Report.error("Failed to create server socket");
 			return;
 		}
 		
