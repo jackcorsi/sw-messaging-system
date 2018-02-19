@@ -36,6 +36,7 @@ public class Server {
 			return;
 		}
 		Client client = new Client(socket);
+		client.startThread();
 		
 		if (client.isConnected()) {
 			boolean allowClient = true;

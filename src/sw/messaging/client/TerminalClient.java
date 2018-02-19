@@ -32,15 +32,17 @@ public class TerminalClient {
 		} catch (IOException e) {
 			Report.error("Could not connect to server!");
 			return;
-		}//TODO: this
+		}
 		
 		senderReceiver = new SenderReceiver(socket);
 		senderReceiver.send(nickname);
+		System.out.println("Sent nickname " + nickname); //TODO remove
 		in = new TerminalInputReader();
 		in.setName("Terminal input reader thread");
 		in.start();
 		mainLoop();
 		in.interrupt();
+		senderReceiver.disconnect();
 	}
 	
 	public static void mainLoop() {

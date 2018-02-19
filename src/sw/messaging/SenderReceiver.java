@@ -43,7 +43,7 @@ public class SenderReceiver extends Thread {
 		String next = queue.poll();
 		if (next != null) 
 			unread --;
-		return queue.poll();
+		return next;
 	}
 	
 	public String[] receive(int n) { //Collect n incoming messages from the socket, only if they are available
@@ -68,13 +68,18 @@ public class SenderReceiver extends Thread {
 		return next;
 	}
 	
+	public void disconnect() {
+		isConnected = false;
+	}
+	
 	public void run() {
-		while (isInterrupted()) {
+		while (isConnected) {
 			String msg;
 			try {
 				msg = in.readLine();
+				System.out.println("Message received by SenderReciever: " + msg); //TODO remove
 				queue.put(msg);
-				unread++; 
+				unread++; //TODO fix race condition here
 			} catch (IOException e) {
 				isConnected = false;
 				break;
@@ -85,6 +90,7 @@ public class SenderReceiver extends Thread {
 			}
 		}
 		isConnected = false;
+		Report.behaviour("SenderReceiver disconnected");
 		try {
 			socket.close();
 		} catch (IOException e) {

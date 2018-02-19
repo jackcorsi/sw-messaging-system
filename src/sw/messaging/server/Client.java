@@ -15,14 +15,15 @@ public class Client implements Runnable {
 		this.socket = socket;
 		senderReceiver = new SenderReceiver(socket);
 		try {
-			name = senderReceiver.waitForMessage(200);
+			Thread.sleep(1000);
+			name = senderReceiver.receive();
 			if (name == null) {
 				Report.error("Received no username from the client");
-				senderReceiver.interrupt();
+				senderReceiver.disconnect();
 				return;
 			}
 			if (name.equals(SharedConst.QUIT_STRING))
-				senderReceiver.interrupt();
+				senderReceiver.disconnect();
 		} catch (InterruptedException e) {
 			//Do nothing
 		}
@@ -48,13 +49,13 @@ public class Client implements Runnable {
 	
 	public void kick() {
 		//TODO: stub
-		senderReceiver.interrupt();
+		senderReceiver.disconnect();
 	}
 	
 	public void kickWithMessage(String msg) {
 		senderReceiver.send(SharedConst.QUIT_STRING);
 		senderReceiver.send(msg);
-		senderReceiver.interrupt();
+		senderReceiver.disconnect();
 	}
 	
 	public IncomingMessage getNextMessage() {
@@ -67,7 +68,7 @@ public class Client implements Runnable {
 			} 
 			incomingRecipient = str;
 			if (incomingRecipient.equals(SharedConst.QUIT_STRING)) { 
-				senderReceiver.interrupt();
+				senderReceiver.disconnect();
 				return null;
 			}
 			String text = senderReceiver.receive();
