@@ -10,15 +10,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /*
- * Class for communication with a server or client via a socket. Runs as a thread, receiving messages from the 
+ * Class that wraps a socket and handles sending and receiving lines of text. Runs as a thread, receiving messages from the 
  * socket and adding them to an internal queue ready for processing by the object's owner
  */
 
 public class SenderReceiver extends Thread {
 	
 	private BufferedReader in;
-	private BlockingQueue <String> queue = new LinkedBlockingQueue <String> ();
-	private int unread = 0; //Keeps track of the number of unread messages we have in the queue
+	private BlockingQueue <String[]> queue = new LinkedBlockingQueue <String[]> ();
 	private PrintStream out;
 	private Socket socket;
 	private boolean isConnected = false;
@@ -28,44 +27,31 @@ public class SenderReceiver extends Thread {
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintStream(socket.getOutputStream());
-			unread = 0;
 			isConnected = true;
 		} catch (IOException e) {
 			//Do nothing
 		}
 	}
 	
-	public void send(String msg) {
-		out.println(msg);
+	public void send(String[] lines) {
+		if (lines.length > SharedConst.MAX_MESSAGE_LINES)
+			throw new RuntimeException("Illegal number of lines in message attempted to be sent");
+		
+		for (int i = 0; i < lines.length; i++)
+			out.println(SharedConst.NOT_SEPARATOR_CHAR + lines[i]);
+		out.println(SharedConst.SEPARATOR_CHAR);
 	}
 	
-	public String receive() { //Collect a single incoming message from the socket
-		String next = queue.poll();
-		if (next != null) 
-			unread --;
-		return next;
-	}
-	
-	public String[] receive(int n) { //Collect n incoming messages from the socket, only if they are available
-		if (n <=  unread) {
-			String[] msgs = new String[n];
-			for (int i = 1; i <= n; i++)
-				msgs[i] = queue.poll();
-			unread -= n;
-			return msgs;
-		} else
-			return null;
+	public String[] receive() { //Collect a single incoming message from the socket
+		return queue.poll();
 	}
 	
 	public boolean isConnected() {
 		return isConnected;
 	}
 	
-	public String waitForMessage(long timeout) throws InterruptedException {
-		String next = queue.poll(timeout, TimeUnit.MILLISECONDS);
-		if (next != null) 
-			unread --;
-		return next;
+	public String[] waitForMillis(long timeout) throws InterruptedException {
+		return queue.poll(timeout, TimeUnit.MILLISECONDS);
 	}
 	
 	public void disconnect() {
@@ -74,12 +60,32 @@ public class SenderReceiver extends Thread {
 	
 	public void run() {
 		while (isConnected) {
-			String msg;
 			try {
-				msg = in.readLine();
-				System.out.println("Message received by SenderReciever: " + msg); //TODO remove
+				String[] lineHolder = new String[SharedConst.MAX_MESSAGE_LINES];
+				int i = 0;
+				while (true) {
+					String line = in.readLine();
+					if (line.length() < 1) {
+						Report.error("SenderReceiver disconnecting: Message length 0"); //TODO remove
+						isConnected = false;
+						break;
+					}
+					if (line.charAt(0) != SharedConst.SEPARATOR_CHAR) {
+						if (i >= lineHolder.length) {
+							Report.error("SenderReceiver disconnecting: Too many lines in message"); //TODO remove
+							isConnected = false;
+							break;
+						}
+						lineHolder[i] = line.substring(1);
+						i++;
+					} else 
+						break;
+				}
+				String[] msg = new String[i];
+				for (int j = 0; j < i; j++) 
+					msg[j] = lineHolder[j];
+				
 				queue.put(msg);
-				unread++; //TODO fix race condition here
 			} catch (IOException e) {
 				isConnected = false;
 				break;
@@ -94,7 +100,7 @@ public class SenderReceiver extends Thread {
 		try {
 			socket.close();
 		} catch (IOException e) {
-			//Do nothing
+			Report.error("SenderReceiver failed to close socket");
 		}
 	}
 	

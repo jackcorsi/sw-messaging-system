@@ -3,12 +3,9 @@ import sw.messaging.*;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
 
 public class Server {
-	
-	private static ArrayList <Client> clients = new ArrayList <Client> ();
+
 	private static ServerSocket serverSocket;
 
 	public static void main(String[] args) {
@@ -21,63 +18,49 @@ public class Server {
 			return;
 		}
 		
-		//Main server loop, which includes accepting new clients and passing on client messages
-		while (true) {
-			acceptNewClient();
-			pushMessages();
-		}
+		ClientAcceptor clientAcceptor = new ClientAcceptor(serverSocket);
+		clientAcceptor.setDaemon(true);
+		clientAcceptor.start();
+		while (true)
+			mainLoop();
 	}
 	
-	private static void acceptNewClient() {
-		Socket socket;
-		try {
-			socket = serverSocket.accept();
-		} catch (IOException e) {
-			return;
-		}
-		Client client = new Client(socket);
-		client.startThread();
-		
-		if (client.isConnected()) {
-			boolean allowClient = true;
-			String name = client.getName();
-			for (Client c : clients) {
-				if (c.getName() == name) {
-					allowClient = false;
-					break;
+	private static void mainLoop() {
+		for (int i = 0; i < Users.numberOfActiveUsers(); i++) {
+			User u = Users.getActive(i);
+			if (u == null) 
+				break;
+			IncomingMessage newMsg = u.process();
+			if (newMsg != null) {
+				boolean found = false;
+				for (int j = 0; j < Users.numberOfActiveUsers(); j++) {
+					User jUser = Users.getActive(j);
+					if (jUser == null)
+						break;
+					if (jUser.getName().equals(newMsg.getRecipient())) {
+						jUser.sendMessage(u, newMsg.getText());
+						found = true;
+						break;
+					}
+				}
+				
+				if (!found) {
+					for (int j = 0; j < Users.numberOfInactiveUsers(); j++) {
+						User jUser = Users.getInactive(j);
+						if (jUser == null)
+							break;
+						if (jUser.getName().equals(newMsg.getRecipient())) {
+							jUser.sendMessage(u, newMsg.getText());
+							found = true;
+							break;
+						}
+					}
+				}
+				
+				if (!found) {
+					//TODO send error back to client
 				}
 			}
-			
-			if (allowClient) {
-				clients.add(client);
-				Report.behaviour("Client " + client.getName() + " has joined");
-			} else {
-				client.kickWithMessage("A user already exists with the name " + name);
-			}
-		}
-		
-	}
-	
-	private static void pushMessages() {
-		for (int i = 0; i < clients.size(); i ++) {
-			Client client = clients.get(i);
-			if (!client.isConnected()) {
-				clients.remove(i);
-				continue;
-			}
-			IncomingMessage msg = client.getNextMessage();
-			boolean sent = false;
-			for (Client recip : clients) {
-				if ( recip.getName().equals(msg.getRecipient()) ) {
-					recip.sendMessage(client, msg.getText());
-					sent = true;
-					break;
-				}
-			}
-			
-			if (!sent)
-				Report.error("Client does not exist: " + msg.getRecipient());
-			//TODO :  send error back to the client
 		}
 	}
 }

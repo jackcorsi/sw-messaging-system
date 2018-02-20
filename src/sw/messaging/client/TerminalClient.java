@@ -35,8 +35,7 @@ public class TerminalClient {
 		}
 		
 		senderReceiver = new SenderReceiver(socket);
-		senderReceiver.send(nickname);
-		System.out.println("Sent nickname " + nickname); //TODO remove
+		senderReceiver.send(new String[] {nickname}); //AAAAA
 		in = new TerminalInputReader();
 		in.setName("Terminal input reader thread");
 		in.start();
@@ -56,17 +55,21 @@ public class TerminalClient {
 			String inString = in.get();
 			if (inString != null) {
 				if (sendRecipient != null) {
-					senderReceiver.send(sendRecipient);
-					senderReceiver.send(inString);
+					senderReceiver.send(new String[] {sendRecipient, inString});
 					sendRecipient = null;
-				}  else 
+				}  else {
 					sendRecipient = inString;
+				}
 			}
 			
 			//Receive messages
-			String[] strings = senderReceiver.receive(2); //Get 2 messages from the server 
-			if (strings != null) 
-				System.out.println(strings[0] + ": " + strings[2]);
+			String[] strings = senderReceiver.receive();
+			if (strings != null) {
+				if (strings.length == 2) {
+					System.out.println(strings[0] + " : " + strings[1]);
+				}
+				//TODO handle singular messages
+			}
 		}
 	}
 }
