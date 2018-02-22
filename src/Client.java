@@ -110,7 +110,7 @@ public class Client {
 		return true;
 	}
 
-	public static boolean mainLoop() {
+	private static boolean mainLoop() {
 		while (true) {
 			if (!senderReceiver.isConnected()) {
 				Report.error("Server connection dropped!");

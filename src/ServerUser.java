@@ -82,7 +82,7 @@ public class ServerUser {
 				}
 				return null;
 			} else if (incoming.length == 2) {
-				return new ServerIncomingMessage(incoming[0], incoming[1]);
+				return new ServerIncomingMessage(incoming[0], incoming[1], device.senderReceiver);
 			} else {
 				kickDevice(device, "Invalid data received from your client");
 				return null;
@@ -94,6 +94,7 @@ public class ServerUser {
 	public boolean equals(ServerUser other) {
 		return other.getName().equals(name);
 	}
+	
 
 	private void kickDevice(Device device, String message) {
 		devices.remove(device);

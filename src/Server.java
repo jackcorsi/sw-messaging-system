@@ -55,7 +55,7 @@ public class Server {
 				}
 				
 				if (!found) {
-					//TODO send error back to client
+					newMsg.sendRejection();
 				}
 			}
 		}
