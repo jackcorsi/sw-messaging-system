@@ -38,9 +38,14 @@ public class ServerUser {
 		if (headMessage != null)
 			headMessage.setNext(msg);
 		headMessage = msg;
-
+		
 		for (Device device : devices) {
-			device.senderReceiver.send(new String[] { SharedConst.EVENT_MSG_NOTIFICATION });
+			if (device.currentMessage == headMessage.getPrevious()) {
+				device.currentMessage = msg;
+				device.senderReceiver.send(new String[] {msg.getSender(), msg.getText()});
+			} else {
+				device.senderReceiver.send(new String[] { SharedConst.EVENT_MSG_NOTIFICATION });
+			}
 		}
 	}
 
@@ -151,5 +156,6 @@ public class ServerUser {
 	private void commandLogout(Device device) {
 		device.senderReceiver.disconnect();
 		devices.remove(device);
+		Report.behaviour("Device signed out for user " + name);
 	}
 }

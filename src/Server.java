@@ -27,6 +27,12 @@ public class Server {
 			ServerUser u = ServerUsers.getActive(i);
 			if (u == null) 
 				break;
+			
+			if (!u.isOnline()) {
+				ServerUsers.makeInactive(u);
+				Report.behaviour("User " + u.getName() + " has gone offline");
+			}
+			
 			ServerIncomingMessage newMsg = u.process();
 			if (newMsg != null) {
 				boolean found = false;

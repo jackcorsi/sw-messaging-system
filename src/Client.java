@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -10,6 +8,8 @@ public class Client {
 	private static ClientTerminalInputReader in;
 
 	public static void main(String[] args) {
+		in = new ClientTerminalInputReader();
+		in.start();
 		// Check correct usage:
 		if (args.length != 1) {
 			Report.error("Usage: java Client server-hostname");
@@ -20,26 +20,15 @@ public class Client {
 			while (!loginLoop(args[0])) {
 			}
 
-			in = new ClientTerminalInputReader();
-			in.start();
 			boolean relog = mainLoop();
-			in.interrupt();
-			senderReceiver.disconnect();
 			if (!relog)
-				break;
+				exit();
 		}
 	}
 
 	public static boolean loginLoop(String hostname) {
-
-		BufferedReader loginReader = new BufferedReader(new InputStreamReader(System.in));
-		String input;
-		try {
-			input = loginReader.readLine();
-		} catch (IOException e1) {
-			System.exit(0);
-			return false;
-		}
+		System.out.println("Begin login loop");
+		String input = in.block();
 		input = input.trim();
 		String arg1;
 
@@ -55,13 +44,7 @@ public class Client {
 			return false;
 		}
 
-		String username;
-		try {
-			username = loginReader.readLine();
-		} catch (IOException e1) {
-			System.exit(0);
-			return false;
-		}
+		String username = in.block();
 
 		Socket socket;
 		try {
@@ -86,6 +69,12 @@ public class Client {
 			return false;
 		}
 		//TODO handle no response
+		
+		if (response == null) {
+			Report.error("Timed out waiting for server response");
+			return false;
+		}
+		
 		if (response.length != 1) {
 			System.exit(0);
 			return false;
@@ -137,7 +126,7 @@ public class Client {
 					commandSend();
 					break;
 				case "logout":
-					System.out.println("Loggin out");
+					System.out.println("Logging out");
 					senderReceiver.send(new String[] {SharedConst.COMMAND_LOGOUT});
 					return true;
 				default:
@@ -232,7 +221,7 @@ public class Client {
 	}
 
 	public static void exit() {
-		in.interrupt();
+		in.stopThread();
 		senderReceiver.disconnect();
 		System.exit(0);
 	}

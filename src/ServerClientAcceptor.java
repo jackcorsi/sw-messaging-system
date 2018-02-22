@@ -89,7 +89,8 @@ public class ServerClientAcceptor extends Thread {
 				if (ServerUsers.newActive(newUser)) {
 					senderReceiver.send(new String[] {SharedConst.CONNECT_ACCEPT_STRING});
 					Report.behaviour("Device logged in for user: " + username);
-				}
+				} else
+					senderReceiver.send(new String[] {SharedConst.EVENT_INVALID_MSG});
 			} else {
 				senderReceiver.disconnect();
 			}

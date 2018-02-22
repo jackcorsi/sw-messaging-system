@@ -9,18 +9,26 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ClientTerminalInputReader extends Thread {
 
 	private BlockingQueue<String> queue = new LinkedBlockingQueue <String> ();
+	private BufferedReader in;
+	private boolean stop = false;
 
 	public void run() {
-		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		while (!isInterrupted()) {
+		stop = false;
+		in = new BufferedReader(new InputStreamReader(System.in));
+		while (!stop) {
 			try {
 				queue.put(in.readLine());
 			} catch (InterruptedException e) {
-				Report.error("Fatal input reading error 1");
+				if (!stop)
+					Report.error("Fatal input reading exception!");
 			} catch (IOException e) {
 				Report.error(e.getMessage());
 			}
 		}
+	}
+	
+	public void stopThread() {
+		stop = true;
 	}
 	
 	public String get() {

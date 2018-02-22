@@ -7,7 +7,7 @@ public class Report {
 	}
 	
 	public static void error(String msg) {
-		System.out.println(msg);
+		System.err.println(msg);
 	}
 	
 }

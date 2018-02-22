@@ -12,6 +12,12 @@ public class ServerUsers {
 			if (existing.equals(u))
 				return false;
 		}
+		
+		for (ServerUser existing : inactive) {
+			if (existing.equals(u))
+				return false;
+		}
+		
 		active.add(u);
 		return true;
 	}
