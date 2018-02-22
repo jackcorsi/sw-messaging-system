@@ -1,6 +1,3 @@
-package sw.messaging.server;
-import sw.messaging.*;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -18,7 +15,7 @@ public class Server {
 			return;
 		}
 		
-		ClientAcceptor clientAcceptor = new ClientAcceptor(serverSocket);
+		ServerClientAcceptor clientAcceptor = new ServerClientAcceptor(serverSocket);
 		clientAcceptor.setDaemon(true);
 		clientAcceptor.start();
 		while (true)
@@ -26,16 +23,16 @@ public class Server {
 	}
 	
 	private static void mainLoop() {
-		for (int i = 0; i < Users.numberOfActiveUsers(); i++) {
-			User u = Users.getActive(i);
+		for (int i = 0; i < ServerUsers.numberOfActiveUsers(); i++) {
+			ServerUser u = ServerUsers.getActive(i);
 			if (u == null) 
 				break;
-			IncomingMessage newMsg = u.process();
+			ServerIncomingMessage newMsg = u.process();
 			if (newMsg != null) {
 				boolean found = false;
-				for (int j = 0; j < Users.numberOfActiveUsers(); j++) {
-					User jUser = Users.getActive(j);
-					if (jUser == null)
+				for (int j = 0; j < ServerUsers.numberOfActiveUsers(); j++) {
+					ServerUser jUser = ServerUsers.getActive(j);
+					if (jUser == null) 
 						break;
 					if (jUser.getName().equals(newMsg.getRecipient())) {
 						jUser.sendMessage(u, newMsg.getText());
@@ -45,8 +42,8 @@ public class Server {
 				}
 				
 				if (!found) {
-					for (int j = 0; j < Users.numberOfInactiveUsers(); j++) {
-						User jUser = Users.getInactive(j);
+					for (int j = 0; j < ServerUsers.numberOfInactiveUsers(); j++) {
+						ServerUser jUser = ServerUsers.getInactive(j);
 						if (jUser == null)
 							break;
 						if (jUser.getName().equals(newMsg.getRecipient())) {

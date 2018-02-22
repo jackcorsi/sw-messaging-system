@@ -1,11 +1,11 @@
-package sw.messaging.server;
 
-public class IncomingMessage {
+
+public class ServerIncomingMessage {
 	
 	private String recipientName;
 	private String message;
 	
-	public IncomingMessage(String recipientName, String message) {
+	public ServerIncomingMessage(String recipientName, String message) {
 		this.recipientName = recipientName;
 		this.message = message;
 	}
