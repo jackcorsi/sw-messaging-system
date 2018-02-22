@@ -190,6 +190,6 @@ public class ServerUser {
 	private void commandLogout(Device device) {
 		device.senderReceiver.disconnect();
 		devices.remove(device);
-		Report.behaviour("Device signed out for user " + name);
+		Report.behaviour("Device signed out for user: " + name);
 	}
 }

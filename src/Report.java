@@ -1,5 +1,3 @@
-
-
 public class Report {
 	
 	public static void behaviour(String msg) {
@@ -10,4 +8,7 @@ public class Report {
 		System.err.println(msg);
 	}
 	
+	public static void debug(String msg) {
+		System.err.println(msg);
+	}
 }

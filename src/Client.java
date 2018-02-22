@@ -27,7 +27,7 @@ public class Client {
 	}
 
 	public static boolean loginLoop(String hostname) {
-		System.out.println("Begin login loop");
+		Report.behaviour("Ready to connect...");
 		String input = in.block();
 		input = input.trim();
 		String arg1;
@@ -103,7 +103,7 @@ public class Client {
 		while (true) {
 			if (!senderReceiver.isConnected()) {
 				Report.error("Server connection dropped!");
-				return false;
+				return true;
 			}
 
 			String command = in.get();
@@ -131,6 +131,7 @@ public class Client {
 				case "logout":
 					System.out.println("Logging out");
 					senderReceiver.send(new String[] { SharedConst.COMMAND_LOGOUT });
+					senderReceiver.disconnect();
 					return true;
 				default:
 					System.out.println("Available commands - next, previous, delete, latest, new, send, logout");

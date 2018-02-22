@@ -65,6 +65,12 @@ public class SenderReceiver extends Thread {
 				int i = 0;
 				while (true) {
 					String line = in.readLine();
+					
+					if (line == null) { //This happened once and I'm not sure why
+						Report.behaviour("SenderReceiver read null string?! Skipping...");
+						continue;
+					}
+					
 					if (line.length() < 1) {
 						Report.error("SenderReceiver disconnecting: Message length 0"); //TODO remove
 						isConnected = false;
@@ -96,11 +102,10 @@ public class SenderReceiver extends Thread {
 			}
 		}
 		isConnected = false;
-		Report.behaviour("SenderReceiver disconnected");
 		try {
 			socket.close();
 		} catch (IOException e) {
-			Report.error("SenderReceiver failed to close socket");
+			Report.error("SenderReceiver failed to close socket!");
 		}
 	}
 	
