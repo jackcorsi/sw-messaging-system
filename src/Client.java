@@ -68,13 +68,13 @@ public class Client {
 			System.exit(0);
 			return false;
 		}
-		//TODO handle no response
-		
+		// TODO handle no response
+
 		if (response == null) {
 			Report.error("Timed out waiting for server response");
 			return false;
 		}
-		
+
 		if (response.length != 1) {
 			System.exit(0);
 			return false;
@@ -122,15 +122,18 @@ public class Client {
 				case "latest":
 					commandLatest();
 					break;
+				case "new":
+					commandNew();
+					break;
 				case "send":
 					commandSend();
 					break;
 				case "logout":
 					System.out.println("Logging out");
-					senderReceiver.send(new String[] {SharedConst.COMMAND_LOGOUT});
+					senderReceiver.send(new String[] { SharedConst.COMMAND_LOGOUT });
 					return true;
 				default:
-					System.out.println("Available commands - next, previous, delete, latest, send, logout");
+					System.out.println("Available commands - next, previous, delete, latest, new, send, logout");
 				}
 			}
 
@@ -138,7 +141,7 @@ public class Client {
 
 			if (incoming == null)
 				continue;
-			
+
 			if (incoming.length == 1) {
 				String event = incoming[0];
 				switch (event) {
@@ -189,6 +192,10 @@ public class Client {
 		senderReceiver.send(new String[] { SharedConst.COMMAND_LATEST });
 	}
 
+	public static void commandNew() {
+		senderReceiver.send(new String[] { SharedConst.COMMAND_NEW });
+	}
+
 	public static void commandSend() {
 		String recipient = in.block();
 		String text = in.block();
@@ -210,9 +217,9 @@ public class Client {
 	public static void noNextEvent() {
 		System.out.println("Reached most recent message");
 	}
-	
+
 	public static void noMessagesEvent() {
-		System.out.println("Your message queue is empty");
+		System.out.println("No messages to display");
 	}
 
 	public static void kicked() {

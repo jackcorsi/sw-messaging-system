@@ -38,11 +38,12 @@ public class ServerUser {
 		if (headMessage != null)
 			headMessage.setNext(msg);
 		headMessage = msg;
-		
+
 		for (Device device : devices) {
 			if (device.currentMessage == headMessage.getPrevious()) {
 				device.currentMessage = msg;
-				device.senderReceiver.send(new String[] {msg.getSender(), msg.getText()});
+				device.senderReceiver.send(new String[] { msg.getSender(), msg.getText() });
+				msg.setRead(true);
 			} else {
 				device.senderReceiver.send(new String[] { SharedConst.EVENT_MSG_NOTIFICATION });
 			}
@@ -79,6 +80,9 @@ public class ServerUser {
 				case SharedConst.COMMAND_LATEST:
 					commandLatest(device);
 					break;
+				case SharedConst.COMMAND_NEW:
+					commandNew(device);
+					break;
 				case SharedConst.COMMAND_LOGOUT:
 					commandLogout(device);
 					break;
@@ -99,7 +103,6 @@ public class ServerUser {
 	public boolean equals(ServerUser other) {
 		return other.getName().equals(name);
 	}
-	
 
 	private void kickDevice(Device device, String message) {
 		devices.remove(device);
@@ -117,6 +120,7 @@ public class ServerUser {
 			ServerLinkedMessage prev = device.currentMessage.getPrevious();
 			device.currentMessage = prev;
 			device.senderReceiver.send(new String[] { prev.getSender(), prev.getText() });
+			prev.setRead(true);
 		}
 	}
 
@@ -129,6 +133,7 @@ public class ServerUser {
 			ServerLinkedMessage next = device.currentMessage.getNext();
 			device.currentMessage = next;
 			device.senderReceiver.send(new String[] { next.getSender(), next.getText() });
+			next.setRead(true);
 		}
 	}
 
@@ -149,8 +154,37 @@ public class ServerUser {
 		device.currentMessage = headMessage;
 		if (headMessage == null)
 			device.senderReceiver.send(new String[] { SharedConst.EVENT_NO_MSGS });
-		else
+		else {
 			device.senderReceiver.send(new String[] { headMessage.getSender(), headMessage.getText() });
+			headMessage.setRead(true);
+		}
+	}
+
+	private void commandNew(Device device) {
+		ServerLinkedMessage msg = headMessage;
+		boolean foundNew = false;
+		
+		while (true) {
+			if (msg == null)
+				break;
+			if (msg.getRead())
+				break;
+			else {
+				msg = msg.getPrevious();
+				foundNew = true;
+			}
+		}
+		if (foundNew) {
+			while (true) {
+				msg = msg.getNext();
+				if (msg == null)
+					break;
+				device.senderReceiver.send(new String[] { msg.getSender(), msg.getText() });
+				msg.setRead(true);
+			}
+		} else {
+			device.senderReceiver.send(new String[] { SharedConst.EVENT_NO_MSGS });
+		}
 	}
 
 	private void commandLogout(Device device) {

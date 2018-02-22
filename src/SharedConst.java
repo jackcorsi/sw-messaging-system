@@ -26,4 +26,5 @@ public class SharedConst {
 	public static final String COMMAND_DELETE = "d";
 	public static final String COMMAND_LATEST = "h";
 	public static final String COMMAND_LOGOUT = "q";
+	public static final String COMMAND_NEW = "*";
 }
