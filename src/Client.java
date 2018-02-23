@@ -71,7 +71,6 @@ public class Client {
 			System.exit(0);
 			return false;
 		}
-		// TODO handle no response
 
 		if (response == null) {
 			Report.error("Timed out waiting for server response");
