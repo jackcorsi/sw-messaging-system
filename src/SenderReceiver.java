@@ -22,6 +22,8 @@ public class SenderReceiver extends Thread {
 	private Socket socket;
 	private boolean isConnected = false;
 	
+	
+	
 	public SenderReceiver(Socket socket) {
 		this.socket = socket;
 		try {
@@ -66,8 +68,8 @@ public class SenderReceiver extends Thread {
 				while (true) {
 					String line = in.readLine();
 					
-					if (line == null) { //This happened once and I'm not sure why
-						Report.behaviour("SenderReceiver read null string?! Skipping...");
+					if (line == null) { 
+						disconnect();
 						continue;
 					}
 					
@@ -85,7 +87,7 @@ public class SenderReceiver extends Thread {
 						lineHolder[i] = line.substring(1);
 						i++;
 					} else 
-						break;
+						break;	
 				}
 				String[] msg = new String[i];
 				for (int j = 0; j < i; j++) 

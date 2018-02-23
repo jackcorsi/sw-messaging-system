@@ -60,6 +60,8 @@ public class ServerUser {
 
 	public ServerIncomingMessage process() {
 		for (Device device : devices) {
+			if (device == null) //Catches concurrency errors when new devices are added by the acceptor thread at the same time
+				continue;
 			String[] incoming = device.senderReceiver.receive();
 
 			if (incoming == null)
@@ -143,10 +145,8 @@ public class ServerUser {
 		} else if (device.currentMessage.isHead()) {
 			headMessage = device.currentMessage.getPrevious();
 			device.currentMessage.delete();
-			device.currentMessage = device.currentMessage.getPrevious();
 		} else {
 			device.currentMessage.delete();
-			device.currentMessage = device.currentMessage.getNext();
 		}
 	}
 
@@ -167,8 +167,10 @@ public class ServerUser {
 		while (true) {
 			if (msg == null)
 				break;
-			if (msg.getRead())
+			if (msg.getRead()) {
+				msg = msg.getNext();
 				break;
+			}
 			else {
 				msg = msg.getPrevious();
 				foundNew = true;
@@ -176,11 +178,11 @@ public class ServerUser {
 		}
 		if (foundNew) {
 			while (true) {
-				msg = msg.getNext();
 				if (msg == null)
 					break;
 				device.senderReceiver.send(new String[] { msg.getSender(), msg.getText() });
 				msg.setRead(true);
+				msg = msg.getNext();
 			}
 		} else {
 			device.senderReceiver.send(new String[] { SharedConst.EVENT_NO_MSGS });

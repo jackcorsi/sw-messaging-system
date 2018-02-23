@@ -39,7 +39,7 @@ public class ServerClientAcceptor extends Thread {
 			String command = handshake[0];
 			String username = handshake[1].toLowerCase();
 			
-			if (username.equals(SharedConst.LOGOUT_INPUT_STRING) || username.equals("server")) {
+			if (username.equals(SharedConst.LOGOUT_INPUT_STRING) || username.equals("server") || username.equals(SharedConst.QUIT_INPUT_STRING)) {
 				senderReceiver.send(new String[] {SharedConst.EVENT_INVALID_MSG});
 				senderReceiver.disconnect();
 				continue;

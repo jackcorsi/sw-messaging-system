@@ -39,6 +39,9 @@ public class Client {
 		case "register":
 			arg1 = SharedConst.CONNECT_REGISTER_STRING;
 			break;
+		case SharedConst.QUIT_INPUT_STRING:
+			System.exit(0);
+			return false;
 		default:
 			System.out.println("USAGE: enter login or register followed by the username you wish to use");
 			return false;
@@ -90,6 +93,9 @@ public class Client {
 		case SharedConst.CONNECT_ACCEPT_STRING:
 			System.out.println("Logged in successfully");
 			break;
+		case SharedConst.QUIT_INPUT_STRING:
+			System.exit(0);
+			return false;
 		default:
 			Report.error("Received illegal response from server!");
 			System.exit(0);
@@ -133,8 +139,12 @@ public class Client {
 					senderReceiver.send(new String[] { SharedConst.COMMAND_LOGOUT });
 					senderReceiver.disconnect();
 					return true;
+				case "quit":
+					senderReceiver.send(new String[] {SharedConst.COMMAND_LOGOUT});
+					senderReceiver.disconnect();
+					return false;
 				default:
-					System.out.println("Available commands - next, previous, delete, latest, new, send, logout");
+					System.out.println("Available commands - next, previous, delete, latest, new, send, logout, quit");
 				}
 			}
 
